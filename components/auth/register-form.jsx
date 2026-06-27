@@ -13,9 +13,38 @@ export function RegisterForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [errors, setErrors] = useState({});
+
+  function validateForm() {
+    const newErrors = {};
+    if (!form.name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (form.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Invalid email address";
+    }
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    return newErrors;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
     setLoading(true);
 
     try {
@@ -34,8 +63,9 @@ export function RegisterForm() {
 
       toast.success("Account created! Please sign in.");
       router.push("/login");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -58,6 +88,7 @@ export function RegisterForm() {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
+            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -69,6 +100,7 @@ export function RegisterForm() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
             />
+            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -81,6 +113,7 @@ export function RegisterForm() {
               required
               minLength={6}
             />
+            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}

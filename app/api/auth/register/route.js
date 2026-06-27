@@ -13,14 +13,20 @@ export async function POST(request) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const body = sanitizeObject(await request.json());
-    const validated = registerSchema.safeParse(body);
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const sanitized = sanitizeObject(body);
+    const validated = registerSchema.safeParse(sanitized);
 
     if (!validated.success) {
-      return NextResponse.json(
-        { error: validated.error.errors[0].message },
-        { status: 400 }
-      );
+      const errorMessage = validated.error.errors[0]?.message || "Validation failed";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
     const { name, email, password } = validated.data;
@@ -36,18 +42,29 @@ export async function POST(request) {
     }
 
     const adminEmail = process.env.ADMIN_EMAIL;
-    const role = adminEmail && email.toLowerCase() === adminEmail.toLowerCase()
-      ? "admin"
-      : "user";
+    const role =
+      adminEmail && email.toLowerCase() === adminEmail.toLowerCase()
+        ? "admin"
+        : "user";
 
-    const user = await User.create({ name, email, password, role });
+    const user = await User.create({ name, email: email.toLowerCase(), password, role });
 
     return NextResponse.json(
-      { message: "Account created successfully", user: { id: user._id, name: user.name, email: user.email } },
+      {
+        message: "Account created successfully",
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("Register error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
