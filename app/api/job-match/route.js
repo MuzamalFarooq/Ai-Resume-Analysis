@@ -8,6 +8,8 @@ import { matchJobDescription } from "@/lib/openai";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/utils/sanitize";
 
+export const runtime = "nodejs";
+
 export async function POST(request) {
   try {
     const user = await requireAuth();
@@ -60,34 +62,7 @@ export async function POST(request) {
       );
     }
 
-    let matchResult = {
-      matchScore: 0,
-      extractedKeywords: [],
-      matchedSkills: [],
-      missingSkills: [],
-      recommendedSkills: [],
-      suggestions: [],
-    };
-
-    if (process.env.OPENAI_API_KEY) {
-      matchResult = await matchJobDescription(resumeText, text, resumeSkills);
-    } else {
-      const jdWords = text.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
-      const uniqueKeywords = [...new Set(jdWords)].slice(0, 20);
-      const matched = resumeSkills.filter((s) =>
-        text.toLowerCase().includes(s.toLowerCase())
-      );
-      matchResult = {
-        matchScore: Math.round((matched.length / Math.max(resumeSkills.length, 1)) * 100),
-        extractedKeywords: uniqueKeywords,
-        matchedSkills: matched,
-        missingSkills: uniqueKeywords.filter(
-          (k) => !resumeText.toLowerCase().includes(k)
-        ).slice(0, 10),
-        recommendedSkills: [],
-        suggestions: ["Upload resume with OpenAI API key configured for better matching"],
-      };
-    }
+    const matchResult = await matchJobDescription(resumeText, text, resumeSkills);
 
     const jobMatch = await JobDescription.create({
       userId: user.id,
@@ -102,8 +77,14 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (error.message === "OPENAI_API_KEY missing") {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
     console.error("Job match error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Job match analysis failed" },
+      { status: 500 }
+    );
   }
 }
 

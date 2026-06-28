@@ -7,6 +7,8 @@ import { generateInterviewQuestions } from "@/lib/openai";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/utils/sanitize";
 
+export const runtime = "nodejs";
+
 export async function POST(request) {
   try {
     const user = await requireAuth();
@@ -30,6 +32,7 @@ export async function POST(request) {
 
     let skills = [];
     let projects = [];
+    let resumeText = "";
     let linkedResumeId = resumeId;
 
     if (resumeId) {
@@ -37,6 +40,7 @@ export async function POST(request) {
       if (resume) {
         skills = resume.extractedSkills || [];
         projects = resume.extractedData?.projects || [];
+        resumeText = resume.parsedText || "";
       }
     } else {
       const latestResume = await Resume.findOne({ userId: user.id, status: "completed" })
@@ -44,30 +48,18 @@ export async function POST(request) {
       if (latestResume) {
         skills = latestResume.extractedSkills || [];
         projects = latestResume.extractedData?.projects || [];
+        resumeText = latestResume.parsedText || "";
         linkedResumeId = latestResume._id;
       }
     }
 
-    let questions = [];
-
-    try {
-      if (process.env.OPENAI_API_KEY) {
-        questions = await generateInterviewQuestions(
-          skills,
-          projects,
-          sanitizeInput(targetRole),
-          questionLimit
-        );
-        if (!Array.isArray(questions) || questions.length === 0) {
-          throw new Error("OpenAI returned no questions");
-        }
-      } else {
-        throw new Error("OPENAI_API_KEY not configured");
-      }
-    } catch (err) {
-      console.error("Interview question generation failed, falling back to static questions:", err);
-      questions = generateFallbackQuestions(sanitizeInput(targetRole), skills);
-    }
+    const questions = await generateInterviewQuestions({
+      skills,
+      projects,
+      resumeText,
+      targetRole: sanitizeInput(targetRole),
+      count: questionLimit,
+    });
 
     const session = await InterviewSession.create({
       userId: user.id,
@@ -82,8 +74,14 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (error.message === "OPENAI_API_KEY missing") {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
     console.error("Create interview error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to generate interview questions" },
+      { status: 500 }
+    );
   }
 }
 
@@ -105,28 +103,4 @@ export async function GET(request) {
     console.error("Get interviews error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-function generateFallbackQuestions(targetRole, skills) {
-  const base = [
-    { id: "1", question: `Tell me about yourself and why you're interested in the ${targetRole} role.`, type: "hr", category: "Introduction" },
-    { id: "2", question: "Describe a challenging project you worked on and how you handled it.", type: "behavioral", category: "Experience" },
-    { id: "3", question: "What are your greatest strengths and weaknesses?", type: "hr", category: "Self Assessment" },
-    { id: "4", question: "Where do you see yourself in 5 years?", type: "hr", category: "Career Goals" },
-    { id: "5", question: "How do you handle tight deadlines and pressure?", type: "behavioral", category: "Work Style" },
-    { id: "6", question: "Describe a time you had a conflict with a team member.", type: "behavioral", category: "Teamwork" },
-    { id: "7", question: "Why should we hire you for this position?", type: "hr", category: "Motivation" },
-    { id: "8", question: "What questions do you have for us?", type: "hr", category: "Closing" },
-  ];
-
-  skills.slice(0, 5).forEach((skill, i) => {
-    base.push({
-      id: `skill-${i}`,
-      question: `Explain your experience with ${skill} and provide an example.`,
-      type: "technical",
-      category: skill,
-    });
-  });
-
-  return base;
 }

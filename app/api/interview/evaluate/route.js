@@ -7,6 +7,8 @@ import { evaluateInterviewAnswer, generateInterviewFeedback } from "@/lib/openai
 import { sanitizeInput } from "@/utils/sanitize";
 import { rateLimit } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(request) {
   try {
     const user = await requireAuth();
@@ -42,26 +44,11 @@ export async function POST(request) {
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    let evaluation = {
-      score: 70,
-      feedback: "Good answer. Consider adding more specific examples and quantifiable results.",
-      accuracy: 70,
-      communication: 75,
-      confidence: 70,
-      clarity: 72,
-    };
-
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        evaluation = await evaluateInterviewAnswer(
-          question.question,
-          answer,
-          session.targetRole
-        );
-      } catch (err) {
-        console.error("Interview answer evaluation failed, using fallback evaluation:", err);
-      }
-    }
+    const evaluation = await evaluateInterviewAnswer(
+      question.question,
+      answer,
+      session.targetRole
+    );
 
     const answerEntry = {
       questionId,
@@ -83,24 +70,12 @@ export async function POST(request) {
 
     const allAnswered = session.answers.length >= session.questions.length;
     if (allAnswered) {
-      const avgScore =
-        session.answers.reduce((sum, a) => sum + (a.score || 0), 0) /
-        session.answers.length;
+      const overallFeedback = await generateInterviewFeedback(
+        session.answers,
+        session.targetRole
+      );
 
-      let overallFeedback = { score: Math.round(avgScore), feedback: "Interview completed." };
-
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          overallFeedback = await generateInterviewFeedback(
-            session.answers,
-            session.targetRole
-          );
-        } catch (err) {
-          console.error("Interview feedback generation failed, using fallback summary:", err);
-        }
-      }
-
-      session.score = overallFeedback.score || Math.round(avgScore);
+      session.score = overallFeedback.score;
       session.feedback = overallFeedback.feedback;
       session.status = "completed";
     }
@@ -116,7 +91,13 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (error.message === "OPENAI_API_KEY missing") {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
     console.error("Evaluate answer error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to evaluate answer" },
+      { status: 500 }
+    );
   }
 }

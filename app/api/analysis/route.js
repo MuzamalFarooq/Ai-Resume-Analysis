@@ -13,6 +13,8 @@ import {
 import { extractResumeData, analyzeResumeWithAI } from "@/lib/openai";
 import { rateLimit } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -45,20 +47,8 @@ export async function POST(request) {
       const parsedText = await parseResumeFile(buffer, resume.fileType);
       const basicSkills = extractSkillsFromText(parsedText);
 
-      let extractedData = {};
-      let aiAnalysis = {};
-
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          extractedData = await extractResumeData(parsedText);
-          aiAnalysis = await analyzeResumeWithAI(parsedText, extractedData);
-        } catch (aiError) {
-          console.error("AI analysis error:", aiError);
-          extractedData = { skills: basicSkills };
-        }
-      } else {
-        extractedData = { skills: basicSkills };
-      }
+      const extractedData = await extractResumeData(parsedText);
+      const aiAnalysis = await analyzeResumeWithAI(parsedText, extractedData);
 
       const allSkills = [
         ...new Set([...(extractedData.skills || []), ...basicSkills]),
@@ -79,13 +69,7 @@ export async function POST(request) {
       resume.readabilityScore = readabilityScore;
       resume.formattingScore = formattingScore;
       resume.sectionScores = aiAnalysis.sectionScores || sectionScores;
-      resume.recommendations = aiAnalysis.recommendations || [
-        "Add quantifiable achievements to experience bullets",
-        "Include a professional summary at the top",
-        "Ensure consistent formatting throughout",
-        "Add relevant keywords from target job descriptions",
-        "Include links to projects or portfolio",
-      ];
+      resume.recommendations = aiAnalysis.recommendations || [];
       resume.grammarIssues = aiAnalysis.grammarIssues || grammarResult.issues;
       resume.formattingIssues = formattingIssues;
       resume.aiImprovements = aiAnalysis.aiImprovements || {};
@@ -101,6 +85,9 @@ export async function POST(request) {
       throw parseError;
     }
   } catch (error) {
+    if (error.message === "OPENAI_API_KEY missing") {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
     console.error("Analysis error:", error);
     return NextResponse.json(
       { error: error.message || "Analysis failed" },

@@ -41,8 +41,4 @@ UserSchema.methods.toJSON = function () {
   return obj;
 };
 
-if (process.env.NODE_ENV !== "production" && mongoose.models.User) {
-  delete mongoose.models.User;
-}
-
-export default mongoose.model("User", UserSchema);
+export default mongoose.models.User || mongoose.model("User", UserSchema);

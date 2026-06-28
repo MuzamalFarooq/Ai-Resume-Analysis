@@ -13,6 +13,8 @@ import {
 } from "@/lib/ats-scorer";
 import { extractResumeData, analyzeResumeWithAI } from "@/lib/openai";
 
+export const runtime = "nodejs";
+
 export async function POST(request) {
   try {
     const user = await requireAuth();
@@ -43,17 +45,8 @@ export async function POST(request) {
     const parsedText = await parseResumeFile(buffer, file.type);
     const basicSkills = extractSkillsFromText(parsedText);
 
-    let extractedData = { skills: basicSkills };
-    let aiAnalysis = {};
-
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        extractedData = await extractResumeData(parsedText);
-        aiAnalysis = await analyzeResumeWithAI(parsedText, extractedData);
-      } catch (aiError) {
-        console.error("AI error:", aiError);
-      }
-    }
+    const extractedData = await extractResumeData(parsedText);
+    const aiAnalysis = await analyzeResumeWithAI(parsedText, extractedData);
 
     const allSkills = [...new Set([...(extractedData.skills || []), ...basicSkills])];
     const readabilityScore = calculateReadability(parsedText);
@@ -78,11 +71,7 @@ export async function POST(request) {
       readabilityScore,
       formattingScore,
       sectionScores: aiAnalysis.sectionScores || sectionScores,
-      recommendations: aiAnalysis.recommendations || [
-        "Add quantifiable achievements to experience bullets",
-        "Include a professional summary at the top",
-        "Ensure consistent formatting throughout",
-      ],
+      recommendations: aiAnalysis.recommendations || [],
       grammarIssues: aiAnalysis.grammarIssues || grammarResult.issues,
       formattingIssues,
       aiImprovements: aiAnalysis.aiImprovements || {},
@@ -94,6 +83,9 @@ export async function POST(request) {
   } catch (error) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error.message === "OPENAI_API_KEY missing") {
+      return NextResponse.json({ error: error.message }, { status: 503 });
     }
     console.error("Upload error:", error);
     return NextResponse.json(
