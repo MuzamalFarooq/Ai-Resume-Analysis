@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Resume from "@/models/Resume";
+import User from "@/models/User";
 import { parseResumeFile, extractSkillsFromText } from "@/lib/resume-parser";
 import {
   calculateATSScore,
@@ -31,9 +32,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
 
-    const limit = rateLimit(`analysis-${resume.userId}`, 20, 3600000);
-    if (!limit.success) {
-      return NextResponse.json({ error: "Analysis limit reached" }, { status: 429 });
+    // Only enforce limits for non-free users. Free users have role === 'user'.
+    const owner = await User.findById(resume.userId).select("role");
+    if (!owner || owner.role !== "user") {
+      const limit = rateLimit(`analysis-${resume.userId}`, 20, 3600000);
+      if (!limit.success) {
+        return NextResponse.json({ error: "Analysis limit reached" }, { status: 429 });
+      }
     }
 
     resume.status = "processing";

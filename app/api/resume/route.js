@@ -36,9 +36,11 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = await requireAuth();
-    const limit = rateLimit(`upload-${user.id}`, 10, 3600000);
-    if (!limit.success) {
-      return NextResponse.json({ error: "Upload limit reached" }, { status: 429 });
+    if (user.role !== "user") {
+      const limit = rateLimit(`upload-${user.id}`, 10, 3600000);
+      if (!limit.success) {
+        return NextResponse.json({ error: "Upload limit reached" }, { status: 429 });
+      }
     }
 
     const body = await request.json();

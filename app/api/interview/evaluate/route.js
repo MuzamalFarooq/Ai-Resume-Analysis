@@ -12,9 +12,11 @@ export const runtime = "nodejs";
 export async function POST(request) {
   try {
     const user = await requireAuth();
-    const limit = rateLimit(`evaluate-${user.id}`, 50, 3600000);
-    if (!limit.success) {
-      return NextResponse.json({ error: "Rate limit reached" }, { status: 429 });
+    if (user.role !== "user") {
+      const limit = rateLimit(`evaluate-${user.id}`, 50, 3600000);
+      if (!limit.success) {
+        return NextResponse.json({ error: "Rate limit reached" }, { status: 429 });
+      }
     }
 
     const body = await request.json();
