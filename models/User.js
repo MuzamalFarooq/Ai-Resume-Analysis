@@ -24,16 +24,9 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-  try {
-    this.password = await bcrypt.hash(this.password, 12);
-    next();
-  } catch (error) {
-    next(error);
-  }
+UserSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 12);
 });
 
 UserSchema.methods.comparePassword = async function (candidatePassword) {
@@ -48,4 +41,8 @@ UserSchema.methods.toJSON = function () {
   return obj;
 };
 
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+if (process.env.NODE_ENV !== "production" && mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
+export default mongoose.model("User", UserSchema);

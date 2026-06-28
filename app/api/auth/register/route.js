@@ -25,7 +25,7 @@ export async function POST(request) {
     const validated = registerSchema.safeParse(sanitized);
 
     if (!validated.success) {
-      const errorMessage = validated.error.errors[0]?.message || "Validation failed";
+      const errorMessage = validated.error.issues[0]?.message || "Validation failed";
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
