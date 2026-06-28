@@ -19,11 +19,15 @@ export default function MockInterviewPage() {
     e.preventDefault();
     setLoading(true);
 
+    const normalizedCount = Number.isFinite(questionCount)
+      ? Math.min(20, Math.max(10, questionCount))
+      : 15;
+
     try {
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetRole, questionCount }),
+        body: JSON.stringify({ targetRole, questionCount: normalizedCount }),
       });
 
       const data = await res.json();

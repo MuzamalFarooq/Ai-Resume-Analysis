@@ -52,11 +52,15 @@ export async function POST(request) {
     };
 
     if (process.env.OPENAI_API_KEY) {
-      evaluation = await evaluateInterviewAnswer(
-        question.question,
-        answer,
-        session.targetRole
-      );
+      try {
+        evaluation = await evaluateInterviewAnswer(
+          question.question,
+          answer,
+          session.targetRole
+        );
+      } catch (err) {
+        console.error("Interview answer evaluation failed, using fallback evaluation:", err);
+      }
     }
 
     const answerEntry = {
@@ -86,10 +90,14 @@ export async function POST(request) {
       let overallFeedback = { score: Math.round(avgScore), feedback: "Interview completed." };
 
       if (process.env.OPENAI_API_KEY) {
-        overallFeedback = await generateInterviewFeedback(
-          session.answers,
-          session.targetRole
-        );
+        try {
+          overallFeedback = await generateInterviewFeedback(
+            session.answers,
+            session.targetRole
+          );
+        } catch (err) {
+          console.error("Interview feedback generation failed, using fallback summary:", err);
+        }
       }
 
       session.score = overallFeedback.score || Math.round(avgScore);

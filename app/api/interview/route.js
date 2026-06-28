@@ -17,6 +17,10 @@ export async function POST(request) {
 
     const body = await request.json();
     const { targetRole, resumeId, questionCount = 15 } = body;
+    const normalizedCount = Number.isFinite(Number(questionCount))
+      ? Math.round(Number(questionCount))
+      : 15;
+    const questionLimit = Math.min(20, Math.max(10, normalizedCount));
 
     if (!targetRole) {
       return NextResponse.json({ error: "Target role is required" }, { status: 400 });
@@ -46,14 +50,22 @@ export async function POST(request) {
 
     let questions = [];
 
-    if (process.env.OPENAI_API_KEY) {
-      questions = await generateInterviewQuestions(
-        skills,
-        projects,
-        sanitizeInput(targetRole),
-        Math.min(20, Math.max(10, questionCount))
-      );
-    } else {
+    try {
+      if (process.env.OPENAI_API_KEY) {
+        questions = await generateInterviewQuestions(
+          skills,
+          projects,
+          sanitizeInput(targetRole),
+          questionLimit
+        );
+        if (!Array.isArray(questions) || questions.length === 0) {
+          throw new Error("OpenAI returned no questions");
+        }
+      } else {
+        throw new Error("OPENAI_API_KEY not configured");
+      }
+    } catch (err) {
+      console.error("Interview question generation failed, falling back to static questions:", err);
       questions = generateFallbackQuestions(sanitizeInput(targetRole), skills);
     }
 
