@@ -33,33 +33,38 @@ export async function POST(request) {
 
     await connectDB();
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    try {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      }
+
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const role =
+        adminEmail && email.toLowerCase() === adminEmail.toLowerCase()
+          ? "admin"
+          : "user";
+
+      const user = await User.create({ name, email: email.toLowerCase(), password, role });
+
       return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 409 }
-      );
-    }
-
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const role =
-      adminEmail && email.toLowerCase() === adminEmail.toLowerCase()
-        ? "admin"
-        : "user";
-
-    const user = await User.create({ name, email: email.toLowerCase(), password, role });
-
-    return NextResponse.json(
-      {
-        message: "Account created successfully",
-        user: {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
+        {
+          message: "Account created successfully",
+          user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+          },
         },
-      },
-      { status: 201 }
-    );
+        { status: 201 }
+      );
+    } catch (err) {
+      console.error("Register create user error:", err);
+      if (err?.code === 11000) {
+        return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      }
+      return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    }
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
