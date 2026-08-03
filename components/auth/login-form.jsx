@@ -27,7 +27,11 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        toast.error(result.error);
+        toast.error(
+          result.error === "CredentialsSignin" || result.error === "Configuration"
+            ? "Invalid email or password"
+            : result.error
+        );
       } else {
         toast.success("Welcome back!");
         router.push("/dashboard");
