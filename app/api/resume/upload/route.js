@@ -11,8 +11,7 @@ import {
   getFormattingIssues,
   calculateSectionScores,
 } from "@/lib/ats-scorer";
-import { extractResumeData, analyzeResumeWithAI } from "@/lib/openai";
-
+import { extractResumeData, analyzeResumeWithAI } from "@/lib/gemini";
 export const runtime = "nodejs";
 
 export async function POST(request) {
@@ -84,7 +83,7 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.message === "OPENAI_API_KEY missing") {
+    if (error.message === "GEMINI_API_KEY missing" || error.message === "OPENAI_API_KEY missing") {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
     console.error("Upload error:", error);

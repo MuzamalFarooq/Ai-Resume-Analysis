@@ -4,7 +4,7 @@ import Resume from "@/models/Resume";
 import JobDescription from "@/models/JobDescription";
 import { requireAuth } from "@/lib/session";
 import { jobDescriptionSchema } from "@/lib/validations";
-import { matchJobDescription } from "@/lib/openai";
+import { matchJobDescription } from "@/lib/gemini";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/utils/sanitize";
 
@@ -79,7 +79,7 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.message === "OPENAI_API_KEY missing") {
+    if (error.message === "GEMINI_API_KEY missing" || error.message === "OPENAI_API_KEY missing") {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
     console.error("Job match error:", error);

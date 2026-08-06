@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Resume from "@/models/Resume";
 import InterviewSession from "@/models/InterviewSession";
 import { requireAuth } from "@/lib/session";
-import { generateInterviewQuestions } from "@/lib/openai";
+import { generateInterviewQuestions } from "@/lib/gemini";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/utils/sanitize";
 
@@ -76,7 +76,7 @@ export async function POST(request) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (error.message === "OPENAI_API_KEY missing") {
+    if (error.message === "GEMINI_API_KEY missing" || error.message === "OPENAI_API_KEY missing") {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
     console.error("Create interview error:", error);
