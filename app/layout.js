@@ -67,6 +67,14 @@ export const metadata = {
       "Upload your resume for free instant ATS scoring, skill gap analysis, AI bullet point improvements, and practice mock interviews.",
     images: [`${siteUrl}/og-image.png`],
   },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+  },
   robots: {
     index: true,
     follow: true,
