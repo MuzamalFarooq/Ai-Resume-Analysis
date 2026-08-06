@@ -8,7 +8,7 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
-  const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+  const publicRoutes = ["/", "/login", "/register", "/signup", "/forgot-password", "/reset-password"];
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith("/api/auth")
   );

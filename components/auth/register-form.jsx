@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -61,8 +62,21 @@ export function RegisterForm() {
         return;
       }
 
-      toast.success("Account created! Please sign in.");
-      router.push("/login");
+      // Auto sign-in new user
+      const signInResult = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (!signInResult?.error) {
+        toast.success("Account created successfully! Welcome.");
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        toast.success("Account created! Please sign in.");
+        router.push("/login");
+      }
     } catch (error) {
       console.error("Registration error:", error);
       toast.error(error instanceof Error ? error.message : "Something went wrong");

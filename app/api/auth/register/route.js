@@ -3,14 +3,18 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import { registerSchema } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
-import { sanitizeObject } from "@/utils/sanitize";
+import { sanitizeInput } from "@/utils/sanitize";
 
 export async function POST(request) {
   try {
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
-    const limit = rateLimit(`register-${ip}`, 5, 3600000);
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded
+      ? forwarded.split(",")[0].trim()
+      : request.headers.get("x-real-ip") || "anonymous";
+
+    const limit = rateLimit(`register-${ip}`, 30, 3600000);
     if (!limit.success) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
 
     let body;
@@ -18,34 +22,40 @@ export async function POST(request) {
       body = await request.json();
     } catch (parseError) {
       console.error("JSON parse error:", parseError);
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid JSON request body" }, { status: 400 });
     }
 
-    const sanitized = sanitizeObject(body);
-    const validated = registerSchema.safeParse(sanitized);
+    const name = sanitizeInput(body.name || "");
+    const email = sanitizeInput(body.email || "").toLowerCase();
+    const password = body.password || "";
+
+    const validated = registerSchema.safeParse({ name, email, password });
 
     if (!validated.success) {
       const errorMessage = validated.error.issues[0]?.message || "Validation failed";
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    const { name, email, password } = validated.data;
-
     await connectDB();
 
     try {
-      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      const existingUser = await User.findOne({ email });
       if (existingUser) {
         return NextResponse.json({ error: "Email already registered" }, { status: 409 });
       }
 
       const adminEmail = process.env.ADMIN_EMAIL;
       const role =
-        adminEmail && email.toLowerCase() === adminEmail.toLowerCase()
+        adminEmail && email === adminEmail.toLowerCase()
           ? "admin"
           : "user";
 
-      const user = await User.create({ name, email: email.toLowerCase(), password, role });
+      const user = await User.create({
+        name,
+        email,
+        password,
+        role,
+      });
 
       return NextResponse.json(
         {
@@ -63,7 +73,7 @@ export async function POST(request) {
       if (err?.code === 11000) {
         return NextResponse.json({ error: "Email already registered" }, { status: 409 });
       }
-      return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to create user account" }, { status: 500 });
     }
   } catch (error) {
     console.error("Register error:", error);
