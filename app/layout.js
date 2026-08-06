@@ -14,11 +14,70 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://resumeanalyzer.muzamal.site";
+
 export const metadata = {
-  title: "ResumeAI - AI Resume Analyzer & Mock Interview Platform",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "ResumeAI - Free AI Resume Analyzer, ATS Checker & Mock Interview",
+    template: "%s | ResumeAI",
+  },
   description:
-    "Upload your resume for AI-powered ATS scoring, skill gap analysis, improvement suggestions, and mock interview practice.",
-  keywords: ["resume analyzer", "ATS score", "mock interview", "AI career"],
+    "Free AI Resume Analyzer & ATS Score Checker. Get instant feedback on your resume, skill gap analysis, AI bullet point improvements, and practice AI mock interviews.",
+  keywords: [
+    "resume analyzer",
+    "ATS score checker",
+    "AI resume review",
+    "free ATS resume checker",
+    "mock interview AI",
+    "resume optimization",
+    "skill gap detection",
+    "AI career coach",
+    "ResumeAI",
+    "resume checker",
+    "job description match",
+  ],
+  authors: [{ name: "ResumeAI", url: siteUrl }],
+  creator: "ResumeAI",
+  publisher: "ResumeAI",
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    title: "ResumeAI - Free AI Resume Analyzer & Mock Interview Platform",
+    description:
+      "Upload your resume for free instant ATS scoring, skill gap analysis, AI bullet point improvements, and practice mock interviews.",
+    url: siteUrl,
+    siteName: "ResumeAI",
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "ResumeAI - AI Resume Analyzer & Mock Interview Platform",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ResumeAI - Free AI Resume Analyzer & Mock Interview Platform",
+    description:
+      "Upload your resume for free instant ATS scoring, skill gap analysis, AI bullet point improvements, and practice mock interviews.",
+    images: [`${siteUrl}/og-image.png`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({ children }) {
