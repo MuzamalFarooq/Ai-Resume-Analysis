@@ -12,6 +12,8 @@ import { cn } from "@/utils/cn";
 import { generateUploadDropzone } from "@uploadthing/react";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
 
+import { PremiumAnalysisLoader } from "@/components/resume/premium-analysis-loader";
+
 const UploadDropzone = generateUploadDropzone(ourFileRouter);
 
 export function ResumeUploader({ onUploadComplete }) {
@@ -45,13 +47,13 @@ export function ResumeUploader({ onUploadComplete }) {
     if (!file) return;
 
     setUploading(true);
-    setProgress(10);
+    setProgress(15);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      setProgress(30);
+      setProgress(35);
 
       const uploadRes = await fetch("/api/resume/upload", {
         method: "POST",
@@ -63,11 +65,11 @@ export function ResumeUploader({ onUploadComplete }) {
         throw new Error(err.error || "Upload failed");
       }
 
-      setProgress(70);
+      setProgress(85);
       const { resume } = await uploadRes.json();
       setProgress(100);
 
-      toast.success("Resume uploaded! Analysis started.");
+      toast.success("Resume analyzed successfully!");
       onUploadComplete?.(resume);
 
       setTimeout(() => {
@@ -75,9 +77,19 @@ export function ResumeUploader({ onUploadComplete }) {
       }, 1000);
     } catch (error) {
       toast.error(error.message || "Upload failed");
-    } finally {
       setUploading(false);
     }
+  }
+
+  if (uploading) {
+    return (
+      <div className="w-full max-w-2xl mx-auto animate-fade-in">
+        <PremiumAnalysisLoader
+          fileName={file?.name || "Your Resume"}
+          progress={progress}
+        />
+      </div>
+    );
   }
 
   return (

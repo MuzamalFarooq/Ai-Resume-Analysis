@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { CircularProgress } from "@/components/ui/progress";
 import { SectionRadarChart, ScoreBarChart } from "@/components/charts/charts";
 import { AnalysisSkeleton } from "@/components/ui/skeleton";
+import { PremiumAnalysisLoader } from "@/components/resume/premium-analysis-loader";
 import { toast } from "sonner";
 import { getScoreColor } from "@/utils/cn";
 import {
@@ -69,10 +70,8 @@ export default function AnalysisPage({ params }) {
 
   if (resume.status === "pending" || resume.status === "processing") {
     return (
-      <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Analyzing your resume...</h2>
-        <p className="text-muted-foreground">This may take a minute</p>
+      <div className="w-full max-w-2xl mx-auto py-10 animate-fade-in">
+        <PremiumAnalysisLoader fileName={resume.fileName || "Your Resume"} />
       </div>
     );
   }
