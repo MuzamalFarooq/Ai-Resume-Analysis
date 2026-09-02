@@ -210,7 +210,7 @@ export default function AnalysisPage({ params }) {
             <ul className="space-y-3">
               {resume.recommendations.map((rec, i) => (
                 <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
                     {i + 1}
                   </span>
                   <span className="text-sm">{rec}</span>
