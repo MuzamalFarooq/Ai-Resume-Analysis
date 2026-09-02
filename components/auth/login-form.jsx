@@ -21,9 +21,12 @@ export function LoginForm() {
     setLoading(true);
 
     try {
+      const email = form.email.trim().toLowerCase();
+      const password = form.password;
+
       const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
+        email,
+        password,
         redirect: false,
       });
 
@@ -33,14 +36,15 @@ export function LoginForm() {
             ? "Invalid email or password"
             : result.error
         );
+        setLoading(false);
       } else {
-        toast.success("Welcome back!");
-        router.push("/dashboard");
-        router.refresh();
+        toast.success("Welcome back! Redirecting...");
+        // Use full navigation so session cookie is sent on first dashboard request
+        window.location.href = "/dashboard";
       }
-    } catch {
-      toast.error("Something went wrong");
-    } finally {
+    } catch (err) {
+      console.error("Login submission error:", err);
+      toast.error("Something went wrong during sign in");
       setLoading(false);
     }
   }

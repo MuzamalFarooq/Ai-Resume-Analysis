@@ -65,18 +65,18 @@ export function RegisterForm() {
 
       // Auto sign-in new user
       const signInResult = await signIn("credentials", {
-        email: form.email,
+        email: form.email.trim().toLowerCase(),
         password: form.password,
         redirect: false,
       });
 
       if (!signInResult?.error) {
-        toast.success("Account created successfully! Welcome.");
-        router.push("/dashboard");
-        router.refresh();
+        toast.success("Account created successfully! Redirecting...");
+        window.location.href = "/dashboard";
       } else {
         toast.success("Account created! Please sign in.");
         router.push("/login");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Registration error:", error);
