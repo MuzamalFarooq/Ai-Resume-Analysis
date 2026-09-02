@@ -106,7 +106,7 @@ export default function LandingPage() {
             <div className="animate-fade-in">
               <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 text-sm mb-6">
                 <Sparkles className="h-4 w-4 text-primary" />
-                Powered by Google Gemini AI
+                Powered by Grok AI
               </div>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
                 Free AI Resume Analyzer &

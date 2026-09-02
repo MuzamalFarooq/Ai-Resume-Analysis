@@ -11,7 +11,7 @@ import {
   getFormattingIssues,
   calculateSectionScores,
 } from "@/lib/ats-scorer";
-import { extractResumeData, analyzeResumeWithAI } from "@/lib/gemini";
+import { extractResumeData, analyzeResumeWithAI } from "@/lib/grok";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -90,7 +90,11 @@ export async function POST(request) {
       throw parseError;
     }
   } catch (error) {
-    if (error.message === "GEMINI_API_KEY missing" || error.message === "OPENAI_API_KEY missing") {
+    if (
+      error.message === "GROK_API_KEY missing" ||
+      error.message === "GEMINI_API_KEY missing" ||
+      error.message === "OPENAI_API_KEY missing"
+    ) {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
     console.error("Analysis error:", error);

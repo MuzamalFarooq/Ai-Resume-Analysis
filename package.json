@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:grok": "node scripts/test-grok-interview.js",
     "test:openai": "node scripts/test-openai-interview.js"
   },
   "dependencies": {

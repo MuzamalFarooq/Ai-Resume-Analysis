@@ -11,7 +11,7 @@ A production-ready full-stack SaaS platform for AI-powered resume analysis, ATS 
 - **Styling:** Tailwind CSS + ShadCN-style components
 - **File Upload:** UploadThing + direct upload fallback
 - **Resume Parsing:** pdf-parse + mammoth
-- **AI:** OpenAI API (gpt-4o-mini)
+- **AI:** Grok AI / xAI API (grok-2-latest)
 - **Charts:** Recharts
 - **Validation:** Zod
 - **Deployment:** Vercel-ready
@@ -40,7 +40,7 @@ A production-ready full-stack SaaS platform for AI-powered resume analysis, ATS 
 
 - Node.js 18+
 - MongoDB (local or Atlas)
-- OpenAI API key
+- Grok AI (xAI) API key
 - UploadThing account (optional)
 
 ### Installation
@@ -61,7 +61,7 @@ cp .env.example .env.local
 MONGODB_URI=mongodb://localhost:27017/ai-resume-analyzer
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key
-OPENAI_API_KEY=sk-your-key
+GROK_API_KEY=xai-your-grok-api-key
 UPLOADTHING_TOKEN=your-token
 ADMIN_EMAIL=admin@example.com
 ```

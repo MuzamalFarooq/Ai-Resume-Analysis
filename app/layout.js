@@ -37,7 +37,7 @@ export const metadata = {
     "resume checker",
     "job description match",
   ],
-  authors: [{ name: "ResumeAI", url: siteUrl }],
+  authors: [{ name: "Muzamal Farooq", url: siteUrl }],
   creator: "ResumeAI",
   publisher: "ResumeAI",
   alternates: {
