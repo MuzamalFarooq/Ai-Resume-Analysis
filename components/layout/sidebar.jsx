@@ -17,6 +17,7 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/resume-builder", label: "AI Resume Builder", icon: Sparkles },
   { href: "/upload", label: "Upload Resume", icon: Upload },
   { href: "/job-match", label: "Job Match", icon: Briefcase },
   { href: "/mock-interview", label: "Mock Interview", icon: MessageSquare },
@@ -78,7 +79,7 @@ export function MobileNav({ userRole }) {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-sm">
       <div className="flex items-center justify-around py-2">
-        {navItems.slice(0, 5).map((item) => {
+        {navItems.slice(0, 6).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (

@@ -31,34 +31,36 @@ export default function AnalysisPage({ params }) {
   const [polling, setPolling] = useState(false);
 
   useEffect(() => {
-    fetchResume();
-  }, [id]);
+    let timeoutId;
+    async function fetchResume() {
+      try {
+        const res = await fetch(`/api/resume/${id}`);
+        const data = await res.json();
 
-  async function fetchResume() {
-    try {
-      const res = await fetch(`/api/resume/${id}`);
-      const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error);
+          router.push("/dashboard");
+          return;
+        }
 
-      if (!res.ok) {
-        toast.error(data.error);
-        router.push("/dashboard");
-        return;
+        setResume(data.resume);
+
+        if (data.resume.status === "pending" || data.resume.status === "processing") {
+          setPolling(true);
+          timeoutId = setTimeout(fetchResume, 3000);
+        } else {
+          setPolling(false);
+        }
+      } catch {
+        toast.error("Failed to load analysis");
+      } finally {
+        setLoading(false);
       }
-
-      setResume(data.resume);
-
-      if (data.resume.status === "pending" || data.resume.status === "processing") {
-        setPolling(true);
-        setTimeout(fetchResume, 3000);
-      } else {
-        setPolling(false);
-      }
-    } catch {
-      toast.error("Failed to load analysis");
-    } finally {
-      setLoading(false);
     }
-  }
+
+    fetchResume();
+    return () => clearTimeout(timeoutId);
+  }, [id, router]);
 
   function handleExport() {
     window.open(`/api/export/${id}?type=resume`, "_blank");

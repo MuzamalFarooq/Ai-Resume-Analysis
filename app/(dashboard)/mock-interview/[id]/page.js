@@ -22,31 +22,31 @@ export default function InterviewSessionPage({ params }) {
   const [evaluations, setEvaluations] = useState({});
 
   useEffect(() => {
-    fetchSession();
-  }, [id]);
+    async function fetchSession() {
+      try {
+        const res = await fetch(`/api/interview/${id}`);
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error);
+          router.push("/mock-interview");
+          return;
+        }
+        setSession(data.session);
 
-  async function fetchSession() {
-    try {
-      const res = await fetch(`/api/interview/${id}`);
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error);
-        router.push("/mock-interview");
-        return;
+        const evals = {};
+        data.session.answers?.forEach((a) => {
+          evals[a.questionId] = a;
+        });
+        setEvaluations(evals);
+      } catch {
+        toast.error("Failed to load session");
+      } finally {
+        setLoading(false);
       }
-      setSession(data.session);
-
-      const evals = {};
-      data.session.answers?.forEach((a) => {
-        evals[a.questionId] = a;
-      });
-      setEvaluations(evals);
-    } catch {
-      toast.error("Failed to load session");
-    } finally {
-      setLoading(false);
     }
-  }
+
+    fetchSession();
+  }, [id, router]);
 
   async function handleSubmitAnswer() {
     if (!answer.trim()) return;

@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Upload,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 
 export const metadata = { title: "Dashboard - ResumeAI" };
@@ -70,12 +71,20 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Overview of your resume analysis and interview progress</p>
         </div>
-        <Link href="/upload">
-          <Button className="gap-2">
-            <Upload className="h-4 w-4" />
-            Upload Resume
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/resume-builder">
+            <Button className="gap-2 shadow-sm bg-gradient-to-r from-primary to-primary/80">
+              <Sparkles className="h-4 w-4" />
+              Create Resume with AI
+            </Button>
+          </Link>
+          <Link href="/upload">
+            <Button variant="outline" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Upload Resume
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

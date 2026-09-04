@@ -18,25 +18,25 @@ export default function InterviewResultPage({ params }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSession();
-  }, [id]);
-
-  async function fetchSession() {
-    try {
-      const res = await fetch(`/api/interview/${id}`);
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error);
-        router.push("/mock-interview");
-        return;
+    async function fetchSession() {
+      try {
+        const res = await fetch(`/api/interview/${id}`);
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error);
+          router.push("/mock-interview");
+          return;
+        }
+        setSession(data.session);
+      } catch {
+        toast.error("Failed to load results");
+      } finally {
+        setLoading(false);
       }
-      setSession(data.session);
-    } catch {
-      toast.error("Failed to load results");
-    } finally {
-      setLoading(false);
     }
-  }
+
+    fetchSession();
+  }, [id, router]);
 
   if (loading) {
     return (

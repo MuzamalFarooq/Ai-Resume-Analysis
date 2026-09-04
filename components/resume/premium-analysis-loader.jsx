@@ -54,17 +54,17 @@ export function PremiumAnalysisLoader({
   const [currentStage, setCurrentStage] = useState(0);
   const [internalProgress, setInternalProgress] = useState(15);
 
-  useEffect(() => {
-    // If external progress is passed, sync with it
-    if (typeof externalProgress === "number") {
-      setInternalProgress(externalProgress);
-      const stageIdx = Math.min(
+  const isExternal = typeof externalProgress === "number";
+  const displayProgress = isExternal ? externalProgress : internalProgress;
+  const displayStage = isExternal
+    ? Math.min(
         ANALYSIS_STAGES.length - 1,
         Math.floor((externalProgress / 100) * ANALYSIS_STAGES.length)
-      );
-      setCurrentStage(stageIdx);
-      return;
-    }
+      )
+    : currentStage;
+
+  useEffect(() => {
+    if (isExternal) return;
 
     // Otherwise run a smooth realistic multi-step animation
     let totalElapsed = 0;
@@ -85,9 +85,9 @@ export function PremiumAnalysisLoader({
     }, 150);
 
     return () => clearInterval(interval);
-  }, [externalProgress]);
+  }, [isExternal]);
 
-  const activeStageInfo = ANALYSIS_STAGES[currentStage] || ANALYSIS_STAGES[0];
+  const activeStageInfo = ANALYSIS_STAGES[displayStage] || ANALYSIS_STAGES[0];
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-card/95 via-card/80 to-background/95 p-6 md:p-10 shadow-2xl backdrop-blur-xl">
@@ -184,14 +184,14 @@ export function PremiumAnalysisLoader({
               <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />
               {activeStageInfo.title}
             </span>
-            <span className="font-mono text-primary font-bold">{internalProgress}%</span>
+            <span className="font-mono text-primary font-bold">{displayProgress}%</span>
           </div>
           <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted/60 p-0.5 border border-border/40">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-primary via-indigo-500 to-primary bg-[length:200%_100%]"
               initial={{ width: "10%" }}
               animate={{
-                width: `${internalProgress}%`,
+                width: `${displayProgress}%`,
                 backgroundPosition: ["0% 0%", "100% 0%"],
               }}
               transition={{
@@ -205,8 +205,8 @@ export function PremiumAnalysisLoader({
         {/* Multi-Stage Step Progress List */}
         <div className="w-full max-w-md grid grid-cols-1 gap-2.5 text-left">
           {ANALYSIS_STAGES.map((stage, idx) => {
-            const isDone = idx < currentStage;
-            const isCurrent = idx === currentStage;
+            const isDone = idx < displayStage;
+            const isCurrent = idx === displayStage;
             const Icon = stage.icon;
 
             return (

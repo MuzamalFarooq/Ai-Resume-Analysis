@@ -14,6 +14,12 @@ import {
 
 const features = [
   {
+    icon: Sparkles,
+    title: "AI Resume Builder",
+    description:
+      "Generate an ATS-optimized, high-impact resume through an intelligent dynamic AI interview tailored to your exact profession.",
+  },
+  {
     icon: FileSearch,
     title: "ATS Score Analysis",
     description:
