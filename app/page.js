@@ -267,7 +267,7 @@ export default function LandingPage() {
             ResumeAI
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ResumeAI (https://resumeanalyzer.muzamal.site). All rights reserved.
+            © {new Date().getFullYear()} ResumeAI. All rights reserved.
           </p>
         </div>
       </footer>
